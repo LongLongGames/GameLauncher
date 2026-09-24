@@ -1,0 +1,71 @@
+## .NET / Visual Studio
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+*.userprefs
+.vs/
+*.rsuser
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+## IDE / OS
+.idea/
+*.DotSettings.user
+*.swp
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+## Publish / deploy
+publish/
+*.publishproj
+*.pubxml
+*.pubxml.user
+
+## Test / coverage
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+
+## Misc
+*.log
+*.tmp
+*.temp
+*.cache
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxupload

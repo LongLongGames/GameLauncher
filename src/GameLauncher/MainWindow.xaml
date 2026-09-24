@@ -1,0 +1,78 @@
+<Window x:Class="GameLauncher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="GameLauncher"
+        Width="960" Height="640"
+        MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        Background="{StaticResource BrushBgDeep}"
+        ResizeMode="CanResize"
+        BorderBrush="{StaticResource BrushBorder}"
+        BorderThickness="1">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="32"/>
+    </Grid.RowDefinitions>
+
+    <!-- 内容区（可拖动边缘） -->
+    <Border Grid.Row="0" Background="{StaticResource BrushBgDeep}"
+            MouseLeftButtonDown="Content_OnMouseLeftButtonDown">
+      <ContentControl x:Name="RootContent"/>
+    </Border>
+
+    <!-- 底部状态栏：图标 / 显示隐藏 / 退出 —— 无系统标题栏按钮 -->
+    <Border Grid.Row="1"
+            Background="{StaticResource BrushBgPanel}"
+            BorderBrush="{StaticResource BrushBorder}"
+            BorderThickness="0,1,0,0">
+      <DockPanel Margin="10,0">
+        <!-- 左侧：应用图标 + 名称 -->
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+          <Border Width="18" Height="18" CornerRadius="4"
+                  Background="{StaticResource BrushAccent}" Margin="0,0,8,0">
+            <TextBlock Text="LL" FontSize="9" FontWeight="Bold"
+                       Foreground="#FF0D1117"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <TextBlock Text="GameLauncher"
+                     FontSize="12"
+                     Foreground="{StaticResource BrushTextSecondary}"
+                     VerticalAlignment="Center"/>
+          <TextBlock Text="  ·  P0"
+                     FontSize="11"
+                     Foreground="{StaticResource BrushTextMuted}"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- 右侧：显示/隐藏、退出 -->
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+          <Button Content="显示 / 隐藏"
+                  Style="{StaticResource StatusBarButton}"
+                  Click="ToggleVisibility_Click"
+                  ToolTip="最小化到系统托盘（再次点击或托盘图标恢复）"/>
+          <Button Content="退出"
+                  Style="{StaticResource StatusBarButton}"
+                  Click="Exit_Click"
+                  Margin="4,0,0,0"
+                  Foreground="{StaticResource BrushDanger}"/>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- 四边可拖拽调整大小的透明热区 -->
+    <Grid Grid.RowSpan="2" IsHitTestVisible="True">
+      <Rectangle Height="4" VerticalAlignment="Top" Fill="Transparent" Cursor="SizeNS"
+                 PreviewMouseLeftButtonDown="Resize_Top"/>
+      <Rectangle Height="4" VerticalAlignment="Bottom" Fill="Transparent" Cursor="SizeNS"
+                 PreviewMouseLeftButtonDown="Resize_Bottom"/>
+      <Rectangle Width="4" HorizontalAlignment="Left" Fill="Transparent" Cursor="SizeWE"
+                 PreviewMouseLeftButtonDown="Resize_Left"/>
+      <Rectangle Width="4" HorizontalAlignment="Right" Fill="Transparent" Cursor="SizeWE"
+                 PreviewMouseLeftButtonDown="Resize_Right"/>
+    </Grid>
+  </Grid>
+</Window>
