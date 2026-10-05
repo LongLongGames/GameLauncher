@@ -15,9 +15,11 @@
     <Description>LongLongGames PC Official Launcher (P0)</Description>
     <!-- 有 Program.cs（Velopack 入口）时保留；没有 Program.cs 就删掉下一行 -->
     <StartupObject>GameLauncher.Program</StartupObject>
+	<ApplicationIcon>Assets/app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+	<Content Include="Assets/app.ico" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
     <!-- 缺这个就会报 Velopack / UpdateInfo / VelopackApp 找不到 -->

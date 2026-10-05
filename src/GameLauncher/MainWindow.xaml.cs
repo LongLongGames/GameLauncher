@@ -145,24 +145,95 @@ public partial class MainWindow : Window
             DragMove();
     }
 
-    private void ToggleVisibility_Click(object sender, RoutedEventArgs e)
+    // ─── Steam / Battle.net 风格：标题栏按钮 ───────────────────────────
+
+    private void TitleBar_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (IsVisible)
+        if (e.ClickCount == 2)
         {
-            Hide();
-            _tray!.ShowBalloonTip(1500, "GameLauncher", "已隐藏到托盘，双击图标可恢复。", ToolTipIcon.Info);
+            ToggleMaximize();
+            return;
+        }
+        if (e.ButtonState == MouseButtonState.Pressed)
+            DragMove();
+    }
+
+    private void Minimize_Click(object sender, RoutedEventArgs e)
+    {
+        // 普通最小化到任务栏（与 Steam 默认 − 一致）
+        WindowState = WindowState.Minimized;
+    }
+
+    private void Maximize_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
+
+    private void ToggleMaximize()
+    {
+        if (WindowState == WindowState.Maximized)
+        {
+            WindowState = WindowState.Normal;
+            if (MaxRestoreButton is not null)
+                MaxRestoreButton.Content = "□";
+            if (MaxRestoreButton is not null)
+                MaxRestoreButton.ToolTip = "最大化";
         }
         else
         {
+            WindowState = WindowState.Maximized;
+            if (MaxRestoreButton is not null)
+                MaxRestoreButton.Content = "❐";
+            if (MaxRestoreButton is not null)
+                MaxRestoreButton.ToolTip = "还原";
+        }
+    }
+
+    /// <summary>标题栏 【×】：收进系统托盘，进程继续跑（Steam / BN 同款）。</summary>
+    private void CloseToTray_Click(object sender, RoutedEventArgs e) => HideToTray(showTip: true);
+
+    private void Window_StateChanged(object? sender, EventArgs e)
+    {
+        // 同步最大化按钮图标
+        if (MaxRestoreButton is null) return;
+        if (WindowState == WindowState.Maximized)
+        {
+            MaxRestoreButton.Content = "❐";
+            MaxRestoreButton.ToolTip = "还原";
+        }
+        else if (WindowState == WindowState.Normal)
+        {
+            MaxRestoreButton.Content = "□";
+            MaxRestoreButton.ToolTip = "最大化";
+        }
+    }
+
+    private void ToggleVisibility_Click(object sender, RoutedEventArgs e)
+    {
+        if (IsVisible && WindowState != WindowState.Minimized)
+            HideToTray(showTip: true);
+        else
             RestoreFromTray();
+    }
+
+    private void HideToTray(bool showTip)
+    {
+        Hide();
+        if (showTip && _tray is not null)
+        {
+            _tray.ShowBalloonTip(
+                1500,
+                "GameLauncher",
+                "已收起到系统托盘。双击图标可恢复，右键可退出。",
+                ToolTipIcon.Info);
         }
     }
 
     private void RestoreFromTray()
     {
         Show();
-        WindowState = WindowState.Normal;
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
         Activate();
+        Topmost = true;
+        Topmost = false;
     }
 
     private void Exit_Click(object sender, RoutedEventArgs e)
@@ -173,10 +244,11 @@ public partial class MainWindow : Window
 
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
+        // Alt+F4 / 系统关闭：同样收托盘，不真正退出（Steam / BN）
         if (!_reallyExit)
         {
             e.Cancel = true;
-            Hide();
+            HideToTray(showTip: true);
             return;
         }
 

@@ -10,31 +10,83 @@
         Background="{StaticResource BrushBgDeep}"
         ResizeMode="CanResize"
         BorderBrush="{StaticResource BrushBorder}"
-        BorderThickness="1">
+        BorderThickness="1"
+        StateChanged="Window_StateChanged">
+
+  <Window.Resources>
+    <!-- Steam / BN 风格标题栏按钮：− □ × -->
+    <Style x:Key="CaptionButton" TargetType="Button">
+      <Setter Property="Width" Value="46"/>
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{StaticResource BrushTextSecondary}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="FontFamily" Value="Segoe UI Symbol, Segoe UI"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                    SnapsToDevicePixels="True">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="#33FFFFFF"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="CaptionCloseButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                    SnapsToDevicePixels="True">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="#FFE81123"/>
+                <Setter Property="Foreground" Value="White"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="#FFC50F1F"/>
+                <Setter Property="Foreground" Value="White"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Window.Resources>
 
   <Grid>
     <Grid.RowDefinitions>
+      <RowDefinition Height="32"/>
       <RowDefinition Height="*"/>
       <RowDefinition Height="32"/>
     </Grid.RowDefinitions>
 
-    <!-- 内容区（可拖动边缘） -->
-    <Border Grid.Row="0" Background="{StaticResource BrushBgDeep}"
-            MouseLeftButtonDown="Content_OnMouseLeftButtonDown">
-      <ContentControl x:Name="RootContent"/>
-    </Border>
-
-    <!-- 底部状态栏：图标 / 显示隐藏 / 退出 —— 无系统标题栏按钮 -->
-    <Border Grid.Row="1"
+    <!-- 顶部标题栏（Steam / Battle.net 风格） -->
+    <Border Grid.Row="0"
             Background="{StaticResource BrushBgPanel}"
             BorderBrush="{StaticResource BrushBorder}"
-            BorderThickness="0,1,0,0">
-      <DockPanel Margin="10,0">
-        <!-- 左侧：应用图标 + 名称 -->
-        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-          <Border Width="18" Height="18" CornerRadius="4"
+            BorderThickness="0,0,0,1"
+            MouseLeftButtonDown="TitleBar_OnMouseLeftButtonDown">
+      <DockPanel>
+        <!-- 左：图标 + 标题 -->
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal"
+                    VerticalAlignment="Center" Margin="12,0,0,0">
+          <Border Width="16" Height="16" CornerRadius="3"
                   Background="{StaticResource BrushAccent}" Margin="0,0,8,0">
-            <TextBlock Text="LL" FontSize="9" FontWeight="Bold"
+            <TextBlock Text="LL" FontSize="8" FontWeight="Bold"
                        Foreground="#FF0D1117"
                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Border>
@@ -42,15 +94,50 @@
                      FontSize="12"
                      Foreground="{StaticResource BrushTextSecondary}"
                      VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- 右：最小化 / 最大化 / 关闭（× → 托盘，与 Steam/BN 一致） -->
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+          <Button Style="{StaticResource CaptionButton}"
+                  Content="─"
+                  ToolTip="最小化"
+                  Click="Minimize_Click"/>
+          <Button x:Name="MaxRestoreButton"
+                  Style="{StaticResource CaptionButton}"
+                  Content="□"
+                  ToolTip="最大化"
+                  Click="Maximize_Click"/>
+          <Button Style="{StaticResource CaptionCloseButton}"
+                  Content="✕"
+                  ToolTip="关闭到系统托盘（不退出，与 Steam / Battle.net 相同）"
+                  Click="CloseToTray_Click"/>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- 内容区 -->
+    <Border Grid.Row="1" Background="{StaticResource BrushBgDeep}"
+            MouseLeftButtonDown="Content_OnMouseLeftButtonDown">
+      <ContentControl x:Name="RootContent"/>
+    </Border>
+
+    <!-- 底部状态栏：关于 / 显示隐藏 / 真正退出 -->
+    <Border Grid.Row="2"
+            Background="{StaticResource BrushBgPanel}"
+            BorderBrush="{StaticResource BrushBorder}"
+            BorderThickness="0,1,0,0">
+      <DockPanel Margin="10,0">
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
           <TextBlock x:Name="VersionLabel"
-                     Text="  ·  v0.0.0"
+                     Text="v0.0.0"
                      FontSize="11"
                      Foreground="{StaticResource BrushTextMuted}"
                      VerticalAlignment="Center"/>
         </StackPanel>
 
-        <!-- 右侧：显示/隐藏、退出 -->
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                    VerticalAlignment="Center" HorizontalAlignment="Right">
           <Button Content="关于"
                   Style="{StaticResource StatusBarButton}"
                   Click="About_Click"
@@ -59,18 +146,19 @@
           <Button Content="显示 / 隐藏"
                   Style="{StaticResource StatusBarButton}"
                   Click="ToggleVisibility_Click"
-                  ToolTip="最小化到系统托盘（再次点击或托盘图标恢复）"/>
+                  ToolTip="最小化到系统托盘"/>
           <Button Content="退出"
                   Style="{StaticResource StatusBarButton}"
                   Click="Exit_Click"
                   Margin="4,0,0,0"
-                  Foreground="{StaticResource BrushDanger}"/>
+                  Foreground="{StaticResource BrushDanger}"
+                  ToolTip="完全退出 GameLauncher"/>
         </StackPanel>
       </DockPanel>
     </Border>
 
-    <!-- 四边可拖拽调整大小的透明热区 -->
-    <Grid Grid.RowSpan="2" IsHitTestVisible="True">
+    <!-- 四边缩放热区（跨三行） -->
+    <Grid Grid.RowSpan="3" IsHitTestVisible="True">
       <Rectangle Height="4" VerticalAlignment="Top" Fill="Transparent" Cursor="SizeNS"
                  PreviewMouseLeftButtonDown="Resize_Top"/>
       <Rectangle Height="4" VerticalAlignment="Bottom" Fill="Transparent" Cursor="SizeNS"
