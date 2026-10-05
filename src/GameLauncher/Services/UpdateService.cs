@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Velopack;
+using Velopack.Exceptions;
 using Velopack.Sources;
 
 namespace GameLauncher.Services;

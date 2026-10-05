@@ -13,21 +13,24 @@
     <Authors>LongLongGames</Authors>
     <Product>GameLauncher</Product>
     <Description>LongLongGames PC Official Launcher (P0)</Description>
-    <!-- Explicit Main in Program.cs for Velopack hooks -->
+    <!-- 有 Program.cs（Velopack 入口）时保留；没有 Program.cs 就删掉下一行 -->
     <StartupObject>GameLauncher.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-    <PackageReference Include="Velopack" Version="0.0.1298" />
+    <!-- 缺这个就会报 Velopack / UpdateInfo / VelopackApp 找不到 -->
+    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Resource Include="Assets\**\*" />
+    <Content Include="Assets\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

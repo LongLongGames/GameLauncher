@@ -1,3 +1,6 @@
+using System.IO;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GameLauncher.Models;
@@ -31,6 +34,10 @@ public partial class GameDetailViewModel : ObservableObject
     [ObservableProperty]
     private bool _showProgress;
 
+    /// <summary>详情区背景：优先 CoverUrl，否则 Assets/covers/{game_id}.*</summary>
+    [ObservableProperty]
+    private ImageSource? _coverImage;
+
     public GameDetailViewModel(IGameInstallService install)
     {
         _install = install;
@@ -40,7 +47,47 @@ public partial class GameDetailViewModel : ObservableObject
     {
         _cts?.Cancel();
         Game = game;
+        CoverImage = ResolveCover(game);
         RefreshFromLocal();
+    }
+
+    /// <summary>
+    /// 解析封面：
+    /// 1) 远程 CoverUrl（http/https）
+    /// 2) 本地 Assets/covers/{game_id}.jpg|png|jpeg|webp
+    /// 3) Assets/covers/_default.jpg|png
+    /// </summary>
+    public static ImageSource? ResolveCover(GameCatalogItem? game)
+    {
+        if (game is null) return GameAssetLoader.LoadCover("_default");
+
+        if (!string.IsNullOrWhiteSpace(game.CoverUrl)
+            && (game.CoverUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                || game.CoverUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+        {
+            try
+            {
+                var bi = new BitmapImage();
+                bi.BeginInit();
+                bi.CacheOption = BitmapCacheOption.OnLoad;
+                bi.UriSource = new Uri(game.CoverUrl, UriKind.Absolute);
+                bi.EndInit();
+                bi.Freeze();
+                return bi;
+            }
+            catch { }
+        }
+
+        var img = GameAssetLoader.LoadCover(game.GameId);
+        System.Diagnostics.Debug.WriteLine(
+            "[Cover] game_id=" + game.GameId + " -> " + GameAssetLoader.DebugProbe("covers", game.GameId));
+        return img;
+    }
+
+    public static ImageSource? ResolveIcon(GameCatalogItem? game)
+    {
+        if (game is null || string.IsNullOrWhiteSpace(game.GameId)) return null;
+        return GameAssetLoader.LoadIcon(game.GameId);
     }
 
     private void RefreshFromLocal()
@@ -58,7 +105,6 @@ public partial class GameDetailViewModel : ObservableObject
         var state = _install.GetState(Game.GameId);
         var latest = Game.LatestVersion ?? "1.0.0";
 
-        // 若已安装且版本落后，标记可更新
         if (state.Status == GameLocalStatus.UpToDate
             && !string.IsNullOrEmpty(state.InstalledVersion)
             && !string.Equals(state.InstalledVersion, latest, StringComparison.OrdinalIgnoreCase))
@@ -139,7 +185,6 @@ public partial class GameDetailViewModel : ObservableObject
 
             if (state.Status == GameLocalStatus.UpToDate)
             {
-                // P0：仅提示，不真正拉起游戏进程
                 StatusText = "启动请求已发送（P0 占位）";
             }
         }
