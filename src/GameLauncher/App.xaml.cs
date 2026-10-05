@@ -26,6 +26,7 @@ public partial class App : Application
             BaseAddress = new Uri(config.MpBaseUrl.TrimEnd('/') + "/"),
             Timeout = TimeSpan.FromSeconds(30)
         });
+        services.AddSingleton<ITokenStore, TokenStore>();
         services.AddSingleton<IMpAuthService, MpAuthService>();
         services.AddSingleton<ICatalogService, CatalogService>();
         services.AddSingleton<IGameInstallService, GameInstallService>();

@@ -40,6 +40,9 @@ public sealed class LoginResponse
     [JsonPropertyName("token_type")]
     public string? TokenType { get; set; }
 
+    [JsonPropertyName("mp_account_id")]
+    public string? MpAccountId { get; set; }
+
     [JsonPropertyName("user")]
     public UserInfo? User { get; set; }
 
@@ -65,9 +68,18 @@ public sealed class MeResponse
     [JsonPropertyName("id")]
     public string? Id { get; set; }
 
+    [JsonPropertyName("mp_account_id")]
+    public string? MpAccountId { get; set; }
+
     [JsonPropertyName("username")]
     public string? Username { get; set; }
 
     [JsonPropertyName("display_name")]
     public string? DisplayName { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public DateTimeOffset? CreatedAt { get; set; }
+
+    [JsonPropertyName("bound_providers")]
+    public string[]? BoundProviders { get; set; }
 }

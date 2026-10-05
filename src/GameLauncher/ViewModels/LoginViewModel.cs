@@ -7,6 +7,7 @@ namespace GameLauncher.ViewModels;
 public partial class LoginViewModel : ObservableObject
 {
     private readonly IMpAuthService _auth;
+    private readonly ITokenStore _tokenStore;
 
     [ObservableProperty]
     private string _username = "";
@@ -22,9 +23,14 @@ public partial class LoginViewModel : ObservableObject
 
     public event Action? LoginSucceeded;
 
-    public LoginViewModel(IMpAuthService auth)
+    public LoginViewModel(IMpAuthService auth, ITokenStore tokenStore)
     {
         _auth = auth;
+        _tokenStore = tokenStore;
+        // 预填上次用户名
+        var last = _tokenStore.GetLastUsername();
+        if (!string.IsNullOrEmpty(last))
+            Username = last;
     }
 
     [RelayCommand]

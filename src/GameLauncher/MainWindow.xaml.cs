@@ -26,7 +26,7 @@ public partial class MainWindow : Window
         Loaded += OnLoaded;
         Closing += OnClosing;
         InitTray();
-        ShowLogin();
+        // 先不 ShowLogin：OnLoaded 里按 ADR-0004 做 token 自动登录
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -34,6 +34,29 @@ public partial class MainWindow : Window
         // 确保无系统标题栏
         WindowStyle = WindowStyle.None;
         _ = InitVersionAndCheckUpdateAsync();
+        _ = TryAutoLoginThenNavigateAsync();
+    }
+
+    /// <summary>
+    /// ADR-0004：TryRestoreToken → ValidateSession → Main / Login。
+    /// 与 match3 / act Unity 客户端启动流一致。
+    /// </summary>
+    private async System.Threading.Tasks.Task TryAutoLoginThenNavigateAsync()
+    {
+        try
+        {
+            var auth = App.Services.GetService(typeof(IMpAuthService)) as IMpAuthService;
+            if (auth is not null && await auth.TryAutoLoginAsync())
+            {
+                ShowMain();
+                return;
+            }
+        }
+        catch
+        {
+            // 网络/异常 → 回登录页
+        }
+        ShowLogin();
     }
 
     private async System.Threading.Tasks.Task InitVersionAndCheckUpdateAsync()

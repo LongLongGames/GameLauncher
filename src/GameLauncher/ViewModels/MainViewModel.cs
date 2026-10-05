@@ -10,6 +10,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly ICatalogService _catalog;
     private readonly SessionState _session;
+    private readonly IMpAuthService _auth;
     private readonly GameDetailViewModel _detail;
 
     [ObservableProperty]
@@ -29,10 +30,11 @@ public partial class MainViewModel : ObservableObject
 
     public GameDetailViewModel Detail => _detail;
 
-    public MainViewModel(ICatalogService catalog, SessionState session, GameDetailViewModel detail)
+    public MainViewModel(ICatalogService catalog, SessionState session, IMpAuthService auth, GameDetailViewModel detail)
     {
         _catalog = catalog;
         _session = session;
+        _auth = auth;
         _detail = detail;
         UserDisplay = session.User?.DisplayName
                       ?? session.User?.Username
@@ -68,7 +70,8 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Logout()
     {
-        _session.Clear();
+        // 清内存 + 持久化，避免下次假自动登录
+        _auth.Logout();
         LogoutRequested?.Invoke();
     }
 
