@@ -30,11 +30,13 @@ public partial class App : Application
         services.AddSingleton<ICatalogService, CatalogService>();
         services.AddSingleton<IGameInstallService, GameInstallService>();
         services.AddSingleton<SessionState>();
+        services.AddSingleton<IUpdateService, UpdateService>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<MainViewModel>();
         services.AddTransient<GameDetailViewModel>();
 
         Services = services.BuildServiceProvider();
+        // 更新弹窗在 MainWindow.OnLoaded 里做，不在这里静默应用
     }
 
     private static AppConfig LoadConfig()

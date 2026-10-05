@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using GameLauncher.Services;
 using GameLauncher.ViewModels;
 using GameLauncher.Views;
 using Application = System.Windows.Application;
@@ -32,6 +33,49 @@ public partial class MainWindow : Window
     {
         // 确保无系统标题栏
         WindowStyle = WindowStyle.None;
+        _ = InitVersionAndCheckUpdateAsync();
+    }
+
+    private async System.Threading.Tasks.Task InitVersionAndCheckUpdateAsync()
+    {
+        var svc = App.Services.GetService(typeof(IUpdateService)) as IUpdateService;
+        var ver = svc?.CurrentVersion ?? "0.0.0";
+        VersionLabel.Text = $"  ·  v{ver}";
+
+        if (svc is null) return;
+        try
+        {
+            var result = await svc.CheckAsync();
+            if (!result.UpdateAvailable || result.Info is null) return;
+
+            var dlg = new Views.UpdateDialog(result.CurrentVersion, result.NewVersion!);
+            dlg.Owner = this;
+            if (dlg.ShowDialog() == true && dlg.ShouldUpdate)
+            {
+                await svc.DownloadAndApplyAsync(result.Info);
+            }
+        }
+        catch
+        {
+            // 网络失败等静默
+        }
+    }
+
+    private void About_Click(object sender, RoutedEventArgs e)
+    {
+        var svc = App.Services.GetService(typeof(IUpdateService)) as IUpdateService;
+        var ver = svc?.CurrentVersion ?? "0.0.0";
+        // isInstalled: quick check without network
+        var installed = false;
+        try
+        {
+            var r = svc?.CheckAsync().GetAwaiter().GetResult();
+            installed = r?.IsInstalled ?? false;
+            if (r is not null) ver = r.CurrentVersion;
+        }
+        catch { }
+        var about = new Views.AboutDialog(ver, installed) { Owner = this };
+        about.ShowDialog();
     }
 
     private void InitTray()

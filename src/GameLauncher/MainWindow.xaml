@@ -42,7 +42,8 @@
                      FontSize="12"
                      Foreground="{StaticResource BrushTextSecondary}"
                      VerticalAlignment="Center"/>
-          <TextBlock Text="  ·  P0"
+          <TextBlock x:Name="VersionLabel"
+                     Text="  ·  v0.0.0"
                      FontSize="11"
                      Foreground="{StaticResource BrushTextMuted}"
                      VerticalAlignment="Center"/>
@@ -50,6 +51,11 @@
 
         <!-- 右侧：显示/隐藏、退出 -->
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+          <Button Content="关于"
+                  Style="{StaticResource StatusBarButton}"
+                  Click="About_Click"
+                  ToolTip="版本与检查更新"
+                  Margin="0,0,4,0"/>
           <Button Content="显示 / 隐藏"
                   Style="{StaticResource StatusBarButton}"
                   Click="ToggleVisibility_Click"

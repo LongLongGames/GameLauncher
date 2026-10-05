@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -13,12 +13,15 @@
     <Authors>LongLongGames</Authors>
     <Product>GameLauncher</Product>
     <Description>LongLongGames PC Official Launcher (P0)</Description>
+    <!-- Explicit Main in Program.cs for Velopack hooks -->
+    <StartupObject>GameLauncher.Program</StartupObject>
   </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageReference Include="Velopack" Version="0.0.1298" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="appsettings.json">

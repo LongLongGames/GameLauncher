@@ -1,0 +1,80 @@
+name: Release (Velopack)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semver without v prefix, e.g. 0.1.0'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve version
+        id: ver
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ inputs.version }}") {
+            $v = "${{ inputs.version }}".TrimStart('v')
+          } else {
+            $v = "${{ github.ref_name }}".TrimStart('v')
+          }
+          echo "version=$v" >> $env:GITHUB_OUTPUT
+          echo "tag=v$v" >> $env:GITHUB_OUTPUT
+          Write-Host "version=$v tag=v$v"
+
+      - name: Restore & Publish (win-x64 self-contained)
+        run: |
+          dotnet restore src/GameLauncher/GameLauncher.csproj
+          dotnet publish src/GameLauncher/GameLauncher.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:Version=${{ steps.ver.outputs.version }} `
+            -p:AssemblyVersion=${{ steps.ver.outputs.version }} `
+            -p:FileVersion=${{ steps.ver.outputs.version }} `
+            -o publish
+
+      - name: Install vpk & pack + upload to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          dotnet tool install -g vpk --version 0.0.1298
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;$env:PATH"
+
+          # Download previous release assets so delta packages can be built
+          vpk download github --repoUrl "https://github.com/${{ github.repository }}" --token $env:GITHUB_TOKEN
+
+          # PackId must match UpdateService.PackId / client
+          vpk pack `
+            --packId LongLongGames.GameLauncher `
+            --packVersion ${{ steps.ver.outputs.version }} `
+            --packDir publish `
+            --mainExe GameLauncher.exe `
+            --packTitle "GameLauncher" `
+            --outputDir Releases
+
+          # Upload & publish the release (creates tag release if needed)
+          vpk upload github `
+            --repoUrl "https://github.com/${{ github.repository }}" `
+            --token $env:GITHUB_TOKEN `
+            --publish `
+            --releaseName "GameLauncher ${{ steps.ver.outputs.tag }}" `
+            --tag ${{ steps.ver.outputs.tag }}
