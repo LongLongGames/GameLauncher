@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace GameLauncher.Helpers;
 
 /// <summary>
@@ -24,7 +26,9 @@ public static class InstallPathResolver
         else
         {
             var exeDir = launcherExeDirectory
-                ?? AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                ?? AppContext.BaseDirectory.TrimEnd(
+                    Path.DirectorySeparatorChar,
+                    Path.AltDirectorySeparatorChar);
             // E:\LongLongGames\GameLauncher → E:\LongLongGames
             platformRoot = Directory.GetParent(exeDir)?.FullName
                 ?? exeDir;

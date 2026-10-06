@@ -2,7 +2,7 @@ using System.Net.Http;
 using System.Text.Json;
 using GameLauncher.Helpers;
 using GameLauncher.Models;
-using Microsoft.Extensions.Configuration;
+// AppConfig 在 App.xaml.cs / namespace GameLauncher
 
 namespace GameLauncher.Services;
 
@@ -16,10 +16,10 @@ public sealed class VersionService : IVersionService
     private readonly HttpClient _http;
     private readonly string _cdnBaseUrl;
 
-    public VersionService(HttpClient http, IConfiguration config)
+    public VersionService(HttpClient http, AppConfig config)
     {
         _http = http;
-        _cdnBaseUrl = config["CdnBaseUrl"]?.Trim() ?? "http://localhost:12280/";
+        _cdnBaseUrl = (config.CdnBaseUrl ?? "http://localhost:12280/").Trim();
         if (!_cdnBaseUrl.EndsWith('/'))
             _cdnBaseUrl += "/";
     }
@@ -42,11 +42,8 @@ public sealed class VersionService : IVersionService
     {
         var latest = manifest.Latest?.Trim() ?? "";
         if (string.IsNullOrEmpty(latest))
-        {
             return new DownloadPlan { Kind = DownloadPlanKind.UpToDate };
-        }
 
-        // 已最新
         if (!string.IsNullOrEmpty(localVersion)
             && string.Equals(localVersion.Trim(), latest, StringComparison.OrdinalIgnoreCase))
         {
@@ -62,14 +59,11 @@ public sealed class VersionService : IVersionService
             && !string.IsNullOrEmpty(localVersion)
             && CompareVersion(localVersion!, min) < 0;
 
-        // 未安装或强制全量
         if (string.IsNullOrEmpty(localVersion) || forceFull)
         {
             var full = manifest.Packages?.Full;
             if (full is null || string.IsNullOrWhiteSpace(full.Path))
-            {
                 return new DownloadPlan { Kind = DownloadPlanKind.UpToDate, TargetVersion = latest };
-            }
 
             return new DownloadPlan
             {
@@ -91,7 +85,6 @@ public sealed class VersionService : IVersionService
             };
         }
 
-        // 增量：从 local 走到 latest
         var chain = FindPatchChain(manifest.Patches, localVersion!, latest);
         if (chain is { Count: > 0 })
         {
@@ -110,7 +103,6 @@ public sealed class VersionService : IVersionService
             };
         }
 
-        // 无可用补丁链 → 回退全量
         var fallback = manifest.Packages?.Full;
         if (fallback is not null && !string.IsNullOrWhiteSpace(fallback.Path))
         {
@@ -135,7 +127,6 @@ public sealed class VersionService : IVersionService
         return new DownloadPlan { Kind = DownloadPlanKind.UpToDate, TargetVersion = latest };
     }
 
-    /// <summary>简单 BFS：patches 中 from→to 边，求 local → target 路径</summary>
     private static List<PatchEntry>? FindPatchChain(
         List<PatchEntry>? patches,
         string fromVersion,
@@ -145,13 +136,14 @@ public sealed class VersionService : IVersionService
             return null;
 
         var edges = patches
-            .Where(p => !string.IsNullOrWhiteSpace(p.From) && !string.IsNullOrWhiteSpace(p.To) && !string.IsNullOrWhiteSpace(p.Path))
+            .Where(p => !string.IsNullOrWhiteSpace(p.From)
+                        && !string.IsNullOrWhiteSpace(p.To)
+                        && !string.IsNullOrWhiteSpace(p.Path))
             .GroupBy(p => p.From.Trim(), StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
 
         var start = fromVersion.Trim();
         var goal = targetVersion.Trim();
-
         var queue = new Queue<(string ver, List<PatchEntry> path)>();
         queue.Enqueue((start, new List<PatchEntry>()));
         var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { start };
@@ -178,7 +170,6 @@ public sealed class VersionService : IVersionService
         return null;
     }
 
-    /// <summary>粗略比较：尽量按点分数字；失败则 OrdinalIgnoreCase</summary>
     private static int CompareVersion(string a, string b)
     {
         static int[] Parts(string s) =>

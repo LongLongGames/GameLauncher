@@ -29,6 +29,7 @@ public partial class App : Application
         services.AddSingleton<ITokenStore, TokenStore>();
         services.AddSingleton<IMpAuthService, MpAuthService>();
         services.AddSingleton<ICatalogService, CatalogService>();
+        services.AddSingleton<IVersionService, VersionService>();
         services.AddSingleton<IGameInstallService, GameInstallService>();
         services.AddSingleton<SessionState>();
         services.AddSingleton<IUpdateService, UpdateService>();
@@ -61,6 +62,11 @@ public partial class App : Application
 public sealed class AppConfig
 {
     public string MpBaseUrl { get; set; } = "http://localhost:11080";
+    public string CdnBaseUrl { get; set; } = "http://localhost:12280/";  // 新增
     public string AppId { get; set; } = "game_launcher";
     public string DeviceId { get; set; } = "pc-launcher-p0";
+    public string Platform { get; set; } = "windows";                   // 新增
+    public string Channel { get; set; } = "official";                   // 新增
+    public string InstallRoot { get; set; } = "";                       // 新增
+    public string InstallLibraryFolder { get; set; } = "common";        // 新增
 }

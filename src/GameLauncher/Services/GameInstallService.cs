@@ -1,16 +1,13 @@
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using GameLauncher.Helpers;
 using GameLauncher.Models;
-using Microsoft.Extensions.Configuration;
+// AppConfig 在 App.xaml.cs / namespace GameLauncher
 
 namespace GameLauncher.Services;
 
-/// <summary>
-/// 真实下载骨架：拉 VersionService 计划 → HTTP 流式下载 → 可选 sha256 → 写本地 version。
-/// 解压/覆盖安装目录的细节可按包格式再补（zip / exe setup）。
-/// </summary>
 public sealed class GameInstallService : IGameInstallService
 {
     private readonly ConcurrentDictionary<string, GameLocalState> _states = new();
@@ -21,13 +18,13 @@ public sealed class GameInstallService : IGameInstallService
     public GameInstallService(
         HttpClient http,
         IVersionService versions,
-        IConfiguration config)
+        AppConfig config)
     {
         _http = http;
         _versions = versions;
         _libraryRoot = InstallPathResolver.ResolveLibraryRoot(
-            config["InstallRoot"],
-            config["InstallLibraryFolder"] ?? "common");
+            config.InstallRoot,
+            config.InstallLibraryFolder);
     }
 
     public string LibraryRoot => _libraryRoot;
@@ -57,9 +54,6 @@ public sealed class GameInstallService : IGameInstallService
         return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// 拉取 manifest、算计划、下载。targetVersion 可忽略，以 CDN latest 为准。
-    /// </summary>
     public async Task DownloadOrUpdateAsync(
         string gameId,
         string? targetVersion = null,
@@ -101,7 +95,8 @@ public sealed class GameInstallService : IGameInstallService
         {
             ct.ThrowIfCancellationRequested();
             var item = plan.Items[i];
-            var fileName = Path.GetFileName(item.RelativePath.Replace('/', Path.DirectorySeparatorChar));
+            var fileName = Path.GetFileName(
+                item.RelativePath.Replace('/', Path.DirectorySeparatorChar));
             if (string.IsNullOrEmpty(fileName))
                 fileName = $"part_{i}";
             var dest = Path.Combine(staging, fileName);
@@ -116,10 +111,6 @@ public sealed class GameInstallService : IGameInstallService
             }, ct);
 
             doneBytes += item.Size ?? new FileInfo(dest).Length;
-
-            // TODO: 按包类型解压/运行安装器到 gameDir
-            // 全量 exe：可 Process.Start 静默安装；zip：ZipFile.ExtractToDirectory
-            // 补丁 zip：覆盖解压到 gameDir
         }
 
         s.Status = GameLocalStatus.Installing;
@@ -127,8 +118,6 @@ public sealed class GameInstallService : IGameInstallService
 
         var finalVersion = plan.TargetVersion ?? manifest.Latest;
         InstallPathResolver.WriteLocalVersion(_libraryRoot, gameId, finalVersion);
-
-        // 清理 staging（可选保留失败现场）
         try { Directory.Delete(staging, recursive: true); } catch { /* ignore */ }
 
         s.InstalledVersion = finalVersion;
