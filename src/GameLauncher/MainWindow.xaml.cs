@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.IO;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -107,17 +108,163 @@ public partial class MainWindow : Window
         {
             Text = "GameLauncher",
             Visible = true,
-            Icon = SystemIcons.Application
+            Icon = LoadAppIcon() ?? SystemIcons.Application
         };
         _tray.DoubleClick += (_, _) => RestoreFromTray();
         var menu = new ContextMenuStrip();
-        menu.Items.Add("显示", null, (_, _) => RestoreFromTray());
+        menu.Items.Add("显示 GameLauncher", null, (_, _) => RestoreFromTray());
         menu.Items.Add("退出", null, (_, _) =>
         {
             _reallyExit = true;
             Close();
         });
         _tray.ContextMenuStrip = menu;
+
+        // 窗口 / 任务栏图标（WPF Window.Icon；ApplicationIcon 管 exe 文件图标）
+        try
+        {
+            var uri = new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute);
+            var sri = System.Windows.Application.GetResourceStream(uri);
+            if (sri is null)
+            {
+                // Content 复制到输出目录时的文件路径回退
+                var path = Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico");
+                if (File.Exists(path))
+                    Icon = BitmapFrameFromFile(path);
+            }
+            else
+            {
+                Icon = System.Windows.Media.Imaging.BitmapFrame.Create(sri.Stream);
+            }
+        }
+        catch
+        {
+            var path = Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico");
+            if (File.Exists(path))
+            {
+                try { Icon = BitmapFrameFromFile(path); } catch { /* ignore */ }
+            }
+        }
+
+        ApplyTitleBarIcon();
+    }
+
+    private void ApplyTitleBarIcon()
+    {
+        try
+        {
+            System.Windows.Media.Imaging.BitmapSource? src = null;
+
+            // pack 嵌入
+            try
+            {
+                var uri = new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute);
+                src = new System.Windows.Media.Imaging.BitmapImage(uri);
+            }
+            catch { /* try file */ }
+
+            if (src is null)
+            {
+                foreach (var path in CandidateIconPaths())
+                {
+                    if (!File.Exists(path)) continue;
+                    var bi = new System.Windows.Media.Imaging.BitmapImage();
+                    bi.BeginInit();
+                    bi.UriSource = new Uri(path, UriKind.Absolute);
+                    bi.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bi.DecodePixelWidth = 32;
+                    bi.EndInit();
+                    bi.Freeze();
+                    src = bi;
+                    break;
+                }
+            }
+
+            if (src is null)
+            {
+                if (TitleBarIcon is not null) TitleBarIcon.Visibility = System.Windows.Visibility.Collapsed;
+                if (TitleBarIconFallback is not null) TitleBarIconFallback.Visibility = System.Windows.Visibility.Visible;
+                return;
+            }
+
+            if (TitleBarIcon is not null)
+            {
+                TitleBarIcon.Source = src;
+                TitleBarIcon.Visibility = System.Windows.Visibility.Visible;
+            }
+            if (TitleBarIconFallback is not null)
+                TitleBarIconFallback.Visibility = System.Windows.Visibility.Collapsed;
+
+            Icon ??= src;
+        }
+        catch
+        {
+            if (TitleBarIcon is not null) TitleBarIcon.Visibility = System.Windows.Visibility.Collapsed;
+            if (TitleBarIconFallback is not null) TitleBarIconFallback.Visibility = System.Windows.Visibility.Visible;
+        }
+    }
+
+    /// <summary>
+    /// 托盘用 System.Drawing.Icon。
+    /// 优先 pack 嵌入资源 Assets/app.ico，其次输出目录 / 工程目录松散文件。
+    /// 旧代码写死 SystemIcons.Application → 系统默认图标，看起来像「没有托盘 icon」。
+    /// </summary>
+    private static Icon? LoadAppIcon()
+    {
+        try
+        {
+            // 1) 嵌入 Resource（csproj <Resource Include="Assets/app.ico"/>）
+            var uri = new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute);
+            var sri = System.Windows.Application.GetResourceStream(uri);
+            if (sri?.Stream is not null)
+            {
+                using (sri.Stream)
+                {
+                    // Icon 需要可 Seek 的流
+                    var ms = new MemoryStream();
+                    sri.Stream.CopyTo(ms);
+                    ms.Position = 0;
+                    return new Icon(ms);
+                }
+            }
+        }
+        catch
+        {
+            // fall through to file paths
+        }
+
+        try
+        {
+            foreach (var path in CandidateIconPaths())
+            {
+                if (File.Exists(path))
+                    return new Icon(path);
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+        return null;
+    }
+
+    private static IEnumerable<string> CandidateIconPaths()
+    {
+        yield return Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico");
+        yield return Path.Combine(AppContext.BaseDirectory, "app.ico");
+        var dev = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Assets", "app.ico"));
+        yield return dev;
+    }
+
+    private static System.Windows.Media.Imaging.BitmapFrame BitmapFrameFromFile(string path)
+    {
+        var bi = new System.Windows.Media.Imaging.BitmapImage();
+        bi.BeginInit();
+        bi.UriSource = new Uri(path, UriKind.Absolute);
+        bi.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+        bi.EndInit();
+        bi.Freeze();
+        return System.Windows.Media.Imaging.BitmapFrame.Create(bi);
     }
 
     private void ShowLogin()

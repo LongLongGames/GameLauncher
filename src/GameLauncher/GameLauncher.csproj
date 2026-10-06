@@ -13,24 +13,24 @@
     <Authors>LongLongGames</Authors>
     <Product>GameLauncher</Product>
     <Description>LongLongGames PC Official Launcher (P0)</Description>
-    <!-- 有 Program.cs（Velopack 入口）时保留；没有 Program.cs 就删掉下一行 -->
     <StartupObject>GameLauncher.Program</StartupObject>
-	<ApplicationIcon>Assets/app.ico</ApplicationIcon>
+    <ApplicationIcon>Assets/app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-	<Content Include="Assets/app.ico" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-    <!-- 缺这个就会报 Velopack / UpdateInfo / VelopackApp 找不到 -->
     <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- exe / 任务栏 / pack URI 用；托盘从同一资源流加载 -->
+    <Resource Include="Assets/app.ico" />
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="Assets\**\*">
+    <!-- 封面与游戏图标等松散文件 -->
+    <Content Include="Assets/**/*" Exclude="Assets/app.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
