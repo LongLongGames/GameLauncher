@@ -98,15 +98,15 @@
       <!-- 背景封面图 -->
       <Image Source="{Binding Detail.CoverImage}"
              Stretch="UniformToFill"
-             Opacity="0.85"
+             Opacity="1"
              SnapsToDevicePixels="True"/>
       <!-- 底部渐变遮罩，保证文字可读 -->
       <Border>
         <Border.Background>
           <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#800D1117" Offset="0"/>
-            <GradientStop Color="#B30D1117" Offset="0.45"/>
-            <GradientStop Color="#D90D1117" Offset="1"/>
+            <GradientStop Color="#CC0D1117" Offset="0"/>      <!-- 顶部半透明深色 -->
+            <GradientStop Color="#00000000" Offset="0.4"/>    <!-- 中部全透明 -->
+            <GradientStop Color="#CC0D1117" Offset="1"/>      <!-- 底部半透明深色 -->
           </LinearGradientBrush>
         </Border.Background>
       </Border>
