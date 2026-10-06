@@ -1,0 +1,33 @@
+{
+  "game_id": "match3",
+  "platform": "windows",
+  "channel": "official",
+  "latest": "1.0.2",
+  "min_supported": "1.0.0",
+  "packages": {
+    "full": {
+      "version": "1.0.2",
+      "path": "download/match3/windows/official/Game_Setup_1.0.2.exe",
+      "size": 524288000,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "patches": [
+    {
+      "from": "1.0.0",
+      "to": "1.0.1",
+      "path": "ab/match3/windows/patch_1.0.0_to_1.0.1.zip",
+      "size": 10485760,
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "from": "1.0.1",
+      "to": "1.0.2",
+      "path": "ab/match3/windows/patch_1.0.1_to_1.0.2.zip",
+      "size": 8388608,
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  ],
+  "exe_relative": "Game.exe",
+  "changelog": "示例清单：请替换 size/sha256 与真实包路径"
+}
