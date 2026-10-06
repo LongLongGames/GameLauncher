@@ -9,7 +9,7 @@
   </UserControl.Resources>
   <Grid>
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="88"/>
+      <ColumnDefinition Width="96"/>
       <ColumnDefinition Width="*"/>
     </Grid.ColumnDefinitions>
 
@@ -26,18 +26,34 @@
                  SelectedItem="{Binding SelectedGame}"
                  Background="Transparent"
                  BorderThickness="0"
+                 Padding="0"
+                 ClipToBounds="False"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.CanContentScroll="False">
           <ListBox.ItemContainerStyle>
             <Style TargetType="ListBoxItem">
               <Setter Property="Padding" Value="0"/>
-              <Setter Property="Margin" Value="8,4"/>
-              <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+              <!-- 左右各 6：选中描边预留后不再顶破 96 列宽 -->
+              <Setter Property="Margin" Value="6,4"/>
+              <Setter Property="HorizontalContentAlignment" Value="Center"/>
+              <Setter Property="HorizontalAlignment" Value="Center"/>
+              <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
               <Setter Property="Template">
                 <Setter.Value>
                   <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="Bd" Background="Transparent" CornerRadius="10" Padding="6">
-                      <ContentPresenter HorizontalAlignment="Center"/>
+                    <!--
+                      关键：选中时 BorderThickness 从 0→2，总宽 +4，在 88 列里右侧被裁。
+                      修复：始终 thickness=2，未选中用透明描边，布局尺寸不变。
+                    -->
+                    <Border x:Name="Bd"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="2"
+                            CornerRadius="10"
+                            Padding="4"
+                            SnapsToDevicePixels="True">
+                      <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                       <Trigger Property="IsMouseOver" Value="True">
@@ -46,7 +62,6 @@
                       <Trigger Property="IsSelected" Value="True">
                         <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushBgElevated}"/>
                         <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BrushAccent}"/>
-                        <Setter TargetName="Bd" Property="BorderThickness" Value="2"/>
                       </Trigger>
                     </ControlTemplate.Triggers>
                   </ControlTemplate>
